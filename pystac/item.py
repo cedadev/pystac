@@ -2,7 +2,7 @@ from html import escape
 from copy import copy, deepcopy
 from datetime import datetime as Datetime
 from pystac.catalog import Catalog
-from typing import Any, Dict, List, Optional, Union, cast
+from typing import Any, Dict, List, Optional, Union, cast, Iterator
 
 import dateutil.parser
 
@@ -214,13 +214,27 @@ class Item(STACObject):
         else:
             asset.extra_fields["datetime"] = datetime_to_str(datetime)
 
-    def get_assets(self) -> Dict[str, Asset]:
+    def get_assets(self, **kwargs) -> Iterator[Asset]:
         """Get this item's assets.
 
         Returns:
             Dict[str, Asset]: A copy of the dictionary of this item's assets.
         """
-        return dict(self.assets.items())
+
+        from pystac_client.asset_search import AssetSearch
+        asset_url = self.get_single_link(rel="assets")
+        return AssetSearch(url=asset_url, **kwargs).get_assets()
+
+    def get_asset(self, id=str) -> Asset:
+        """
+
+        """
+
+        assets = self.get_assets()
+        for asset in assets:
+            if asset.asset_id == id:
+                return asset
+        return None
 
     def add_asset(self, key: str, asset: Asset) -> None:
         """Adds an Asset to this item.
